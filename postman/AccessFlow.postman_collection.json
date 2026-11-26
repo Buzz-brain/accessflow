@@ -1,0 +1,318 @@
+{
+  "info": {
+    "name": "AccessFlow Backend API",
+    "description": "API collection for the simulated accessible mobile banking backend. Transfers require a MongoDB replica set. Monetary values are stored as integer kobo and exposed with naira compatibility fields. Set baseUrl and run an auth request first.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api/v1" },
+    { "key": "token", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "transactionId", "value": "" },
+    { "key": "assessmentId", "value": "" },
+    { "key": "taskId", "value": "" },
+    { "key": "attemptId", "value": "" },
+    { "key": "recipientAccountNumber", "value": "0200000001" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": { "method": "GET", "auth": { "type": "noauth" }, "url": "{{baseUrl}}/../health" }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 201) {", "  pm.collectionVariables.set('recipientAccountNumber', pm.response.json().data.account.accountNumber);", "}"] } }],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"New AccessFlow User\",\n  \"email\": \"new.user@example.com\",\n  \"phoneNumber\": \"+2348012345678\",\n  \"password\": \"StrongPass1\"\n}" },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) {", "  pm.collectionVariables.set('token', pm.response.json().data.token);", "}"] } }],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"demo.user1@accessflow.local\",\n  \"password\": \"Demo@12345\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Admin login",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) {", "  pm.collectionVariables.set('adminToken', pm.response.json().data.token);", "}"] } }],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@accessflow.local\",\n  \"password\": \"Demo@12345\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        { "name": "Me", "request": { "method": "GET", "url": "{{baseUrl}}/auth/me" } }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "item": [
+        { "name": "My account", "request": { "method": "GET", "url": "{{baseUrl}}/accounts/me" } },
+        { "name": "My balance", "request": { "method": "GET", "url": "{{baseUrl}}/accounts/me/balance" } }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "Review transfer",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) {", "  pm.collectionVariables.set('transactionId', pm.response.json().data.transaction.id);", "}"] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "postman-review-001" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"recipientAccountNumber\": \"{{recipientAccountNumber}}\",\n  \"amount\": \"5000.00\",\n  \"amountKobo\": 500000,\n  \"narration\": \"Research test transfer\"\n}" },
+            "url": "{{baseUrl}}/transactions/transfer/review"
+          }
+        },
+        {
+          "name": "Confirm transfer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"confirmed\": true\n}" },
+            "url": "{{baseUrl}}/transactions/{{transactionId}}/confirm"
+          }
+        },
+        {
+          "name": "Cancel pending transfer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Cancelled by participant\"\n}" },
+            "url": "{{baseUrl}}/transactions/{{transactionId}}/cancel"
+          }
+        },
+        { "name": "List transactions", "request": { "method": "GET", "url": "{{baseUrl}}/transactions?page=1&limit=20&type=transfer" } },
+        { "name": "Get transaction", "request": { "method": "GET", "url": "{{baseUrl}}/transactions/{{transactionId}}" } }
+      ]
+    },
+    {
+      "name": "Accessibility",
+      "item": [
+        { "name": "Get preferences", "request": { "method": "GET", "url": "{{baseUrl}}/accessibility/preferences" } },
+        {
+          "name": "Update preferences",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"voiceGuidanceEnabled\": true,\n  \"voiceSpeed\": 1.25,\n  \"privacyMode\": true,\n  \"highContrastEnabled\": true,\n  \"textScale\": 1.5,\n  \"preferredAccessibilityMode\": \"voice_first\"\n}" },
+            "url": "{{baseUrl}}/accessibility/preferences"
+          }
+        },
+        { "name": "Reset preferences", "request": { "method": "POST", "url": "{{baseUrl}}/accessibility/preferences/reset" } }
+      ]
+    },
+    {
+      "name": "MAM and MAS",
+      "item": [
+        { "name": "Dimensions", "request": { "method": "GET", "url": "{{baseUrl}}/mam/dimensions" } },
+        { "name": "Criteria", "request": { "method": "GET", "url": "{{baseUrl}}/mam/criteria" } },
+        { "name": "Weights", "request": { "method": "GET", "url": "{{baseUrl}}/mam/weights" } },
+        {
+          "name": "MAS weights (admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/mas/weights"
+          }
+        },
+        {
+          "name": "Create assessment (admin)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 201) {", "  pm.collectionVariables.set('assessmentId', pm.response.json().data.id);", "}"] } }],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"assessmentName\": \"Prototype evaluation\",\n  \"assessedVersion\": \"v1.0\",\n  \"assessmentNotes\": \"Initial methodology review\"\n}" },
+            "url": "{{baseUrl}}/mas/assessments"
+          }
+        },
+        {
+          "name": "Save criterion scores (admin)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"scores\": [\n    { \"criterionCode\": \"P01\", \"score\": 80, \"evidence\": \"Screen-reader inspection\" },\n    { \"criterionCode\": \"P02\", \"score\": 90, \"evidence\": \"API announcement verified\" }\n  ]\n}" },
+            "url": "{{baseUrl}}/mas/assessments/{{assessmentId}}/scores"
+          }
+        },
+        {
+          "name": "Complete assessment (admin)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"assessmentNotes\": \"All criteria assessed with documented evidence\"\n}" },
+            "url": "{{baseUrl}}/mas/assessments/{{assessmentId}}/complete"
+          }
+        },
+        {
+          "name": "List assessments (admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/mas/assessments?status=draft"
+          }
+        },
+        {
+          "name": "Get assessment (admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/mas/assessments/{{assessmentId}}"
+          }
+        },
+        {
+          "name": "Latest MAS result (admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/mas/results/latest"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Evaluation",
+      "item": [
+        {
+          "name": "Tasks",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200 && pm.response.json().data.length) {", "  pm.collectionVariables.set('taskId', pm.response.json().data[0].id);", "}"] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/evaluation/tasks" }
+        },
+        {
+          "name": "Start task",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 201) {", "  pm.collectionVariables.set('attemptId', pm.response.json().data.id);", "}"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"participantCode\": \"P-001\"\n}" },
+            "url": "{{baseUrl}}/evaluation/tasks/{{taskId}}/start"
+          }
+        },
+        {
+          "name": "Get task attempt",
+          "request": { "method": "GET", "url": "{{baseUrl}}/evaluation/attempts/{{attemptId}}" }
+        },
+        {
+          "name": "Complete task",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"taskEvaluationId\": \"{{attemptId}}\",\n  \"participantCode\": \"P-001\",\n  \"isSuccessful\": true,\n  \"errorCount\": 0,\n  \"assistanceRequired\": false,\n  \"notes\": \"Completed with TalkBack\"\n}" },
+            "url": "{{baseUrl}}/evaluation/tasks/{{taskId}}/complete"
+          }
+        },
+        {
+          "name": "Submit SUS",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"participantCode\": \"P-001\",\n  \"responses\": [5, 1, 4, 2, 4, 2, 5, 1, 4, 2]\n}" },
+            "url": "{{baseUrl}}/evaluation/sus"
+          }
+        },
+        {
+          "name": "Evaluation report (admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/evaluation/reports?participantCode=P-001"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Update MAS weights (admin)",
+          "request": {
+            "method": "PUT",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"P\": 0.2,\n  \"O\": 0.2,\n  \"C\": 0.2,\n  \"S\": 0.25,\n  \"A\": 0.15\n}" },
+            "url": "{{baseUrl}}/admin/mas/weights"
+          }
+        },
+        {
+          "name": "Create criterion (admin)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Balance announcement uses local currency\",\n  \"code\": \"P06\",\n  \"dimensionCode\": \"P\",\n  \"description\": \"Balance announcements state the configured currency.\",\n  \"assessmentInstructions\": \"Retrieve a balance response and verify the announcement includes NGN.\",\n  \"assessmentMethod\": \"automated\"\n}" },
+            "url": "{{baseUrl}}/admin/criteria"
+          }
+        },
+        {
+          "name": "Deactivate criterion (admin)",
+          "request": {
+            "method": "DELETE",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/admin/criteria/P06"
+          }
+        },
+        {
+          "name": "List users (admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/admin/users"
+          }
+        },
+        {
+          "name": "Evaluation report (admin alternate)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/admin/evaluation/reports"
+          }
+        },
+        {
+          "name": "List task attempts (admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/admin/evaluation/attempts?page=1&limit=20"
+          }
+        },
+        {
+          "name": "Get task attempt (admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/admin/evaluation/attempts/{{attemptId}}"
+          }
+        }
+      ]
+    }
+  ]
+}
