@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useRouter, Redirect } from 'expo-router';
 import { Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from 'lucide-react-native';
@@ -83,41 +83,57 @@ export default function LoginScreen() {
         </View>
 
         <Card style={styles.formCard} padded>
-          <Input
-            label="Email Address"
-            placeholder="you@example.com"
-            leftAdornment={<Mail size={18} color={theme.colors.textSecondary} />}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            textContentType="emailAddress"
-            returnKeyType="next"
-            description="Use the email address you registered with."
-            error={errors.email?.message}
-            {...control.register('email')}
+          <Controller
+            control={control}
+            name="email"
+            render={({ field }) => (
+              <Input
+                label="Email Address"
+                placeholder="you@example.com"
+                leftAdornment={<Mail size={18} color={theme.colors.textSecondary} />}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                returnKeyType="next"
+                description="Use the email address you registered with."
+                error={errors.email?.message}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+              />
+            )}
           />
-          <Input
-            label="Password"
-            placeholder="Enter your password"
-            leftAdornment={<LockKeyhole size={18} color={theme.colors.textSecondary} />}
-            secureTextEntry={!showPassword}
-            autoCapitalize="none"
-            autoCorrect={false}
-            textContentType="password"
-            returnKeyType="done"
-            description="At least 8 characters with a letter and a number."
-            error={errors.password?.message}
-            rightAdornment={
-              <Pressable
-                onPress={() => setShowPassword((value) => !value)}
-                accessibilityRole="button"
-                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-                style={styles.eyeButton}
-              >
-                {showPassword ? <EyeOff size={18} color={theme.colors.textSecondary} /> : <Eye size={18} color={theme.colors.textSecondary} />}
-              </Pressable>
-            }
-            {...control.register('password')}
+          <Controller
+            control={control}
+            name="password"
+            render={({ field }) => (
+              <Input
+                label="Password"
+                placeholder="Enter your password"
+                leftAdornment={<LockKeyhole size={18} color={theme.colors.textSecondary} />}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="password"
+                returnKeyType="done"
+                description="At least 8 characters with a letter and a number."
+                error={errors.password?.message}
+                rightAdornment={
+                  <Pressable
+                    onPress={() => setShowPassword((value) => !value)}
+                    accessibilityRole="button"
+                    accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                    style={styles.eyeButton}
+                  >
+                    {showPassword ? <EyeOff size={18} color={theme.colors.textSecondary} /> : <Eye size={18} color={theme.colors.textSecondary} />}
+                  </Pressable>
+                }
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+              />
+            )}
           />
 
           <SwitchRow

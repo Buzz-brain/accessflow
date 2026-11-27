@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Link, Redirect, useRouter } from 'expo-router';
 import { ArrowRight, LockKeyhole } from 'lucide-react-native';
@@ -80,46 +80,78 @@ export default function RegisterScreen() {
         </View>
 
         <Card style={styles.card} elevated>
-          <Input
-            label="Full name"
-            placeholder="Ada Lovelace"
-            autoCapitalize="words"
-            textContentType="name"
-            description="This appears on your account and transfer reviews."
-            error={errors.fullName?.message}
-            {...control.register('fullName')}
+          <Controller
+            control={control}
+            name="fullName"
+            render={({ field }) => (
+              <Input
+                label="Full name"
+                placeholder="Ada Lovelace"
+                autoCapitalize="words"
+                textContentType="name"
+                description="This appears on your account and transfer reviews."
+                error={errors.fullName?.message}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+              />
+            )}
           />
-          <Input
-            label="Email address"
-            placeholder="you@example.com"
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            textContentType="emailAddress"
-            description="You will use this to sign in."
-            error={errors.email?.message}
-            {...control.register('email')}
+          <Controller
+            control={control}
+            name="email"
+            render={({ field }) => (
+              <Input
+                label="Email address"
+                placeholder="you@example.com"
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                description="You will use this to sign in."
+                error={errors.email?.message}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+              />
+            )}
           />
-          <Input
-            label="Phone number"
-            placeholder="+2348012345678"
-            keyboardType="phone-pad"
-            autoCorrect={false}
-            textContentType="telephoneNumber"
-            description="Include the country code if possible."
-            error={errors.phoneNumber?.message}
-            {...control.register('phoneNumber')}
+          <Controller
+            control={control}
+            name="phoneNumber"
+            render={({ field }) => (
+              <Input
+                label="Phone number"
+                placeholder="+2348012345678"
+                keyboardType="phone-pad"
+                autoCorrect={false}
+                textContentType="telephoneNumber"
+                description="Include the country code if possible."
+                error={errors.phoneNumber?.message}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+              />
+            )}
           />
-          <Input
-            label="Password"
-            placeholder="At least 8 characters"
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-            textContentType="newPassword"
-            description="Use at least 8 characters with a letter and a number."
-            error={errors.password?.message}
-            {...control.register('password')}
+          <Controller
+            control={control}
+            name="password"
+            render={({ field }) => (
+              <Input
+                label="Password"
+                placeholder="At least 8 characters"
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="newPassword"
+                description="Use at least 8 characters with a letter and a number."
+                error={errors.password?.message}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+              />
+            )}
           />
 
           {formError ? (
