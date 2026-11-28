@@ -64,4 +64,11 @@ const list = [
 
 const detail = [param('id').isMongoId().withMessage('id must be a valid transaction identifier')];
 
-module.exports = { review, confirm, cancel, list, detail };
+const lookupRecipient = [
+  param('accountNumber')
+    .trim()
+    .matches(/^\d{10}$/)
+    .withMessage('accountNumber must be a 10-digit account number')
+];
+
+module.exports = { review, confirm, cancel, list, detail, lookupRecipient };

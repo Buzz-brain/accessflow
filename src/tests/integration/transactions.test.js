@@ -38,6 +38,28 @@ describe('Banking API', () => {
     expect(balance).toBe(sender.account.balance);
   });
 
+  test('looks up a recipient without exposing balance details', async () => {
+    const response = await request(app)
+      .get(`/api/v1/accounts/lookup/${recipient.account.accountNumber}`)
+      .set(authHeader(senderToken));
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.accountNumber).toBe(recipient.account.accountNumber);
+    expect(response.body.data.recipientName).toBe('Recipient Test');
+    expect(response.body.data.bankName).toBe('AccessFlow Bank');
+    expect(JSON.stringify(response.body)).not.toContain('balance');
+
+    const self = await request(app)
+      .get(`/api/v1/accounts/lookup/${sender.account.accountNumber}`)
+      .set(authHeader(senderToken));
+    expect(self.status).toBe(400);
+    expect(self.body.code).toBe('SELF_TRANSFER');
+
+    const missing = await request(app).get('/api/v1/accounts/lookup/0000000000').set(authHeader(senderToken));
+    expect(missing.status).toBe(404);
+    expect(missing.body.code).toBe('RECIPIENT_NOT_FOUND');
+  });
+
   test('requires explicit confirmation and does not move funds on review', async () => {
     const before = await getBalance(senderToken);
 
@@ -48,6 +70,9 @@ describe('Banking API', () => {
 
     expect(review.status).toBe(200);
     expect(review.body.data.review.recipientAccountNumber).toBe(recipient.account.accountNumber);
+    expect(review.body.data.review.recipientBankName).toBe(recipient.account.bankName);
+    expect(review.body.data.review.feeKobo).toBe(0);
+    expect(review.body.data.review.totalDebitKobo).toBe(500000);
     expect(review.body.data.review.confirmationInstructions).toMatch(/confirm/i);
     expect(review.body.data.transaction.status).toBe('pending_confirmation');
     expect(await getBalance(senderToken)).toBe(before);

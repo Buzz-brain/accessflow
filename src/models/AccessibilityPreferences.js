@@ -5,6 +5,7 @@ const accessibilityPreferencesSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
     voiceGuidanceEnabled: { type: Boolean, required: true, default: true },
+    financialAnnouncementsEnabled: { type: Boolean, required: true, default: true },
     voiceSpeed: { type: Number, required: true, default: 1, min: 0.5, max: 2 },
     vibrationEnabled: { type: Boolean, required: true, default: true },
     vibrationIntensity: { type: Number, required: true, default: 50, min: 0, max: 100 },
@@ -21,6 +22,7 @@ const accessibilityPreferencesSchema = new mongoose.Schema(
 accessibilityPreferencesSchema.methods.toClientObject = function toClientObject() {
   return {
     voiceGuidanceEnabled: this.voiceGuidanceEnabled,
+    financialAnnouncementsEnabled: this.financialAnnouncementsEnabled,
     voiceSpeed: this.voiceSpeed,
     vibrationEnabled: this.vibrationEnabled,
     vibrationIntensity: this.vibrationIntensity,

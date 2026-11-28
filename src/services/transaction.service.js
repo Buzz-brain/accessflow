@@ -9,6 +9,7 @@ const { successFeedback, errorFeedback, infoFeedback } = require('../utils/respo
 const { formatKobo, parseKoboAmount, resolveAmountKobo } = require('../utils/money');
 
 const IDEMPOTENCY_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+const TRANSFER_FEE_KOBO = 0;
 const addHistory = (status, note) => ({ status, at: new Date(), note });
 
 const normalizeIdempotencyKey = (value) => {
@@ -43,7 +44,55 @@ const createReference = async (session) => {
   throw new ApiError(500, 'A unique transaction reference could not be generated', 'REFERENCE_ERROR');
 };
 
-const userDisplayName = (user, account) => user?.fullName || account.accountName;
+const userDisplayName = (user, account) => user?.fullName || Account.normalizeAccountName(account?.accountName || '');
+
+const decorateTransactions = async (transactions, viewerAccountId) => {
+  const decorated = transactions.map((transaction) => {
+    if (transaction.senderAccountId && transaction.senderAccountId.equals(viewerAccountId)) {
+      return { transaction, direction: 'debit', counterpartyAccountId: transaction.recipientAccountId };
+    }
+    if (transaction.recipientAccountId && transaction.recipientAccountId.equals(viewerAccountId)) {
+      return { transaction, direction: 'credit', counterpartyAccountId: transaction.senderAccountId };
+    }
+    return {
+      transaction,
+      direction: transaction.transactionType === 'withdrawal' ? 'debit' : 'credit',
+      counterpartyAccountId: null
+    };
+  });
+
+  const accountIds = [...new Set(decorated.map((item) => item.counterpartyAccountId?.toString()).filter(Boolean))];
+  const accounts = accountIds.length
+    ? await Account.find({ _id: { $in: accountIds } }).select('userId accountNumber accountName bankName').lean()
+    : [];
+
+  const accountMap = new Map(accounts.map((account) => [account._id.toString(), account]));
+  const userIds = [...new Set(accounts.map((account) => account.userId?.toString()).filter(Boolean))];
+  const usersById = await (userIds.length
+    ? User.find({ _id: { $in: userIds } }).select('fullName').lean()
+    : Promise.resolve([]));
+  const userMap = new Map(usersById.map((user) => [user._id.toString(), user]));
+
+  return decorated.map(({ transaction, direction, counterpartyAccountId }) => {
+    const account = counterpartyAccountId ? accountMap.get(counterpartyAccountId.toString()) : null;
+    const user = account?.userId ? userMap.get(account.userId.toString()) : null;
+    const name = user?.fullName || (account ? Account.normalizeAccountName(account.accountName) : null);
+
+    return {
+      ...transaction.toClientObject(),
+      direction,
+      counterpartyName: name,
+      counterpartyBankName: account ? Account.normalizeBankName(account.bankName) : null,
+      counterpartyAccountNumber: account?.accountNumber ?? null,
+      counterpartyAccountLast4: account?.accountNumber ? account.accountNumber.slice(-4) : null
+    };
+  });
+};
+
+const decorateTransaction = async (transaction, viewerAccountId) => {
+  const [decorated] = await decorateTransactions([transaction], viewerAccountId);
+  return decorated;
+};
 
 const buildReview = async (transaction, sender, recipient, { replayed = false } = {}) => {
   const recipientUser = await User.findById(recipient.userId).select('fullName').lean();
@@ -56,14 +105,17 @@ const buildReview = async (transaction, sender, recipient, { replayed = false } 
     message: isPending
       ? 'Transfer ready for review. No funds have been moved.'
       : `An existing transfer was found with status ${transaction.status}.`,
-    transaction: transaction.toClientObject(),
+    transaction: await decorateTransaction(transaction, sender._id),
     review: {
       recipientName,
       recipientAccountNumber: recipient.accountNumber,
+      recipientBankName: recipient.bankName,
       senderName,
       senderAccountNumber: sender.accountNumber,
       amount: transaction.amount,
       amountKobo: transaction.amountKobo,
+      feeKobo: TRANSFER_FEE_KOBO,
+      totalDebitKobo: transaction.amountKobo + TRANSFER_FEE_KOBO,
       narration: transaction.narration,
       reference: transaction.reference,
       status: transaction.status,
@@ -73,7 +125,8 @@ const buildReview = async (transaction, sender, recipient, { replayed = false } 
     },
     accessibilityFeedback: infoFeedback(
       isPending
-        ? `Transfer review. Sending ${formatKobo(transaction.amountKobo, sender.currency)} to ${recipientName}, account ${recipient.accountNumber}. ` +
+        ? `Transfer review. Sending ${formatKobo(transaction.amountKobo, sender.currency)} to ${recipientName}, account ${recipient.accountNumber} at ${recipient.bankName}. ` +
+          `Fee ${formatKobo(TRANSFER_FEE_KOBO, sender.currency)}. Total debit ${formatKobo(transaction.amountKobo + TRANSFER_FEE_KOBO, sender.currency)}. ` +
           `Reference ${transaction.reference}. No money has moved. Confirm only after you have reviewed these details.`
         : `An existing transfer with reference ${transaction.reference} has already reached ${transaction.status}. No further action is required.`,
       { priority: 'high' }
@@ -284,7 +337,7 @@ const confirmTransfer = async (userId, id, { confirmed } = {}) => {
   const recipientUser = await User.findById(recipient.userId).select('fullName').lean();
 
   return {
-    transaction: transaction.toClientObject(),
+    transaction: await decorateTransaction(transaction, sender._id),
     accessibilityFeedback: successFeedback(
       `Your transfer of ${formatKobo(transaction.amountKobo, sender.currency)} to ${userDisplayName(recipientUser, recipient)} was successful. ` +
         `Reference ${transaction.reference}. Your new balance is ${formatKobo(transaction.newBalanceKobo, sender.currency)}.`,
@@ -315,7 +368,7 @@ const cancelTransfer = async (userId, id, { reason } = {}) => {
   }
 
   return {
-    transaction: transaction.toClientObject(),
+    transaction: await decorateTransaction(transaction, sender._id),
     accessibilityFeedback: infoFeedback(`Transfer ${transaction.reference} was cancelled. No funds were moved.`)
   };
 };
@@ -341,10 +394,7 @@ const listTransactions = async (userId, query) => {
   ]);
 
   return {
-    items: items.map((item) => ({
-      ...item.toClientObject(),
-      direction: item.senderAccountId && item.senderAccountId.equals(account._id) ? 'debit' : 'credit'
-    })),
+    items: await decorateTransactions(items, account._id),
     meta: getPaginationMeta(pagination, total)
   };
 };
@@ -357,7 +407,7 @@ const getTransaction = async (userId, id) => {
   });
 
   if (!transaction) throw ApiError.notFound('Transaction not found');
-  return transaction.toClientObject();
+  return decorateTransaction(transaction, account._id);
 };
 
 const failedTransferFeedback = (message) => errorFeedback(`Transfer failed. ${message}`, { priority: 'high' });

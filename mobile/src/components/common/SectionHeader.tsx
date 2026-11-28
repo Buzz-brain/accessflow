@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { ChevronRight } from 'lucide-react-native';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 

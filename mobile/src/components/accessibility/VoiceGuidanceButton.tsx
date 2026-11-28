@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { Volume2, VolumeX } from 'lucide-react-native';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { usePreferences } from '@/src/features/accessibility/context/PreferencesContext';

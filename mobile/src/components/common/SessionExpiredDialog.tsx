@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { useAuth } from '@/src/features/auth/context/AuthContext';
 import { useFeedback } from '@/src/services/feedback/FeedbackProvider';
 import { useAppTheme } from '@/src/theme/ThemeProvider';

@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { Delete } from 'lucide-react-native';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 
@@ -17,7 +18,16 @@ export function AmountKeypad({ onPress }: { onPress: (key: string) => void }) {
           android_ripple={{ color: theme.colors.primaryLight, borderless: true }}
           style={({ pressed }) => [
             styles.key,
-            { backgroundColor: pressed ? theme.colors.primaryLight : 'transparent' }
+            {
+              backgroundColor: pressed ? theme.colors.primaryLight : theme.colors.surface,
+              borderColor: theme.colors.border,
+              shadowColor: theme.colors.text,
+              shadowOpacity: pressed ? 0.06 : 0.14,
+              shadowRadius: pressed ? 4 : 8,
+              shadowOffset: { width: 0, height: pressed ? 1 : 3 },
+              elevation: pressed ? 1 : 3,
+              transform: pressed ? [{ translateY: 1 }] : []
+            }
           ]}
         >
           {key === 'delete' ? (
@@ -32,7 +42,7 @@ export function AmountKeypad({ onPress }: { onPress: (key: string) => void }) {
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  key: { width: '30%', minHeight: 58, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start', gap: 10, marginBottom: 16 },
+  key: { width: '30%', minHeight: 58, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   keyText: { fontSize: 22, fontWeight: '600' }
 });

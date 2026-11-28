@@ -1,10 +1,20 @@
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useEffect } from 'react';
+import { CircleCheck } from 'lucide-react-native';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { BrandMark } from '@/src/components/common/BrandMark';
 
-export function ProcessingOverlay({ visible, message = 'Processing your transfer securely' }: { visible: boolean; message?: string }) {
+export function ProcessingOverlay({
+  visible,
+  message = 'Processing your transfer securely',
+  success = false
+}: {
+  visible: boolean;
+  message?: string;
+  success?: boolean;
+}) {
   const theme = useAppTheme();
   const scale = useSharedValue(1);
 
@@ -24,8 +34,21 @@ export function ProcessingOverlay({ visible, message = 'Processing your transfer
   return (
     <Modal transparent animationType="fade" onRequestClose={() => undefined}>
       <View style={[styles.root, { backgroundColor: theme.colors.overlay }]} accessible accessibilityRole="alert" accessibilityLabel={message}>
-        <Animated.View style={animatedStyle}>
-          <BrandMark size={84} />
+        <Animated.View
+          style={[
+            animatedStyle,
+            success && {
+              backgroundColor: theme.colors.successSurface,
+              borderRadius: 28,
+              padding: 18,
+              shadowColor: theme.colors.success,
+              shadowOpacity: 0.25,
+              shadowRadius: 20,
+              elevation: 6
+            }
+          ]}
+        >
+          {success ? <CircleCheck size={84} color={theme.colors.success} strokeWidth={1.8} /> : <BrandMark size={84} />}
         </Animated.View>
         <Text style={[styles.title, { color: '#FFFFFF' }]}>{message}</Text>
         <Text style={styles.subtitle}>Please keep the app open. Do not submit the transfer again.</Text>

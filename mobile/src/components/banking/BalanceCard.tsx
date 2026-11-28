@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { formatAccountNumber, formatKobo } from '@/src/utils/money';

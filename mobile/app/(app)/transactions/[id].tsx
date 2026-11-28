@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CalendarDays, CircleDollarSign, Info, Landmark, RefreshCw } from 'lucide-react-native';
 import { Screen } from '@/src/components/common/Screen';
@@ -11,6 +12,7 @@ import { Skeleton } from '@/src/components/common/Skeleton';
 import { StatusBadge } from '@/src/components/banking/StatusBadge';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { getTransaction } from '@/src/features/transactions/services/transaction.service';
+import { useScreenGuidance } from '@/src/hooks/useScreenGuidance';
 import { toApiError } from '@/src/api/client';
 import { formatDateTime } from '@/src/utils/dates';
 import { formatNaira, formatSignedNaira } from '@/src/utils/money';
@@ -21,6 +23,7 @@ export default function TransactionDetailScreen() {
   const theme = useAppTheme();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  useScreenGuidance('Transaction details', 'Review the complete record for this transaction.', 'Done');
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,16 +62,29 @@ export default function TransactionDetailScreen() {
           value: transaction.confirmedAt ? formatDateTime(transaction.confirmedAt) : 'Not applicable',
           icon: CalendarDays
         },
+        ...(transaction.counterpartyAccountNumber
+          ? [
+              {
+                label: isCredit ? 'Received from account' : 'Sent to account',
+                value: transaction.counterpartyAccountNumber,
+                icon: Landmark
+              }
+            ]
+          : []),
         {
           label: 'Balance before',
           value: transaction.previousBalanceKobo === null ? '—' : formatNaira(transaction.previousBalance ?? 0),
           icon: Landmark
         },
-        {
-          label: 'Balance after',
-          value: transaction.newBalanceKobo === null ? '—' : formatNaira(transaction.newBalance ?? 0),
-          icon: Landmark
-        },
+        ...(transaction.status === 'pending_confirmation'
+          ? []
+          : [
+              {
+                label: 'Balance after',
+                value: transaction.newBalanceKobo === null ? '—' : formatNaira(transaction.newBalance ?? 0),
+                icon: Landmark
+              }
+            ]),
         ...(transaction.failureReason ? [{ label: 'Failure reason', value: transaction.failureReason, icon: Info }] : [])
       ]
     : [];
@@ -76,7 +92,12 @@ export default function TransactionDetailScreen() {
   return (
     <Screen scroll={false} edges={['top', 'bottom']} style={{ backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <AppHeader title="Transaction details" subtitle="Complete record from AccessFlow" showBack />
+        <AppHeader
+          title="Transaction details"
+          subtitle="Complete record from AccessFlow"
+          showBack
+          onBack={() => router.replace('/transactions')}
+        />
         {loading ? (
           <View style={styles.skeletonStack}>
             <Skeleton height={112} radius={22} />
@@ -118,7 +139,12 @@ export default function TransactionDetailScreen() {
               ))}
             </Card>
 
-            <Button label="Done" onPress={() => router.back()} variant="secondary" />
+            <Button
+              label="Done"
+              onPress={() => router.replace('/transactions')}
+              variant="secondary"
+              style={styles.doneButton}
+            />
           </>
         ) : null}
       </ScrollView>
@@ -134,6 +160,7 @@ const styles = StyleSheet.create({
   summaryMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 6 },
   date: {},
   details: { marginTop: 18, overflow: 'hidden' },
+  doneButton: { marginTop: 18 },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 16, borderBottomWidth: StyleSheet.hairlineWidth },
   lastRow: { borderBottomWidth: 0 },
   rowCopy: { flex: 1, gap: 4 },

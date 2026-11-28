@@ -4,6 +4,10 @@ const { GESTURE_SENSITIVITY, ACCESSIBILITY_MODES } = require('../constants');
 
 const update = [
   body('voiceGuidanceEnabled').optional().isBoolean().withMessage('voiceGuidanceEnabled must be a boolean'),
+  body('financialAnnouncementsEnabled')
+    .optional()
+    .isBoolean()
+    .withMessage('financialAnnouncementsEnabled must be a boolean'),
   body('voiceSpeed').optional().isFloat({ min: 0.5, max: 2 }).withMessage('voiceSpeed must be between 0.5 and 2'),
   body('vibrationEnabled').optional().isBoolean().withMessage('vibrationEnabled must be a boolean'),
   body('vibrationIntensity')
@@ -26,6 +30,7 @@ const update = [
 
 const allowedFields = new Set([
   'voiceGuidanceEnabled',
+  'financialAnnouncementsEnabled',
   'voiceSpeed',
   'vibrationEnabled',
   'vibrationIntensity',

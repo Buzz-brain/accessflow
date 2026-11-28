@@ -44,7 +44,7 @@ const createAdmin = async () => {
   await Account.create({
     userId: user._id,
     accountNumber: `09${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`,
-    accountName: 'Administrator Simulated Account',
+    accountName: 'Administrator AccessFlow Account',
     bankName: DEFAULT_BANK_NAME,
     accountType: DEFAULT_ACCOUNT_TYPE,
     balanceKobo: DEMO_STARTING_BALANCE_KOBO,

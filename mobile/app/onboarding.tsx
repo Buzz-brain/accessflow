@@ -1,15 +1,15 @@
 import { useRef, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { ArrowRight, Check, Eye, Hand } from 'lucide-react-native';
 import { Screen } from '@/src/components/common/Screen';
 import { Button } from '@/src/components/common/Button';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useOnboarding } from '@/src/hooks/useOnboarding';
 import { useAuth } from '@/src/features/auth/context/AuthContext';
 import { useFeedback } from '@/src/services/feedback/FeedbackProvider';
+import { useScreenGuidance } from '@/src/hooks/useScreenGuidance';
 
 const onboardingOne = require('../temp-assets/onboarding-one.png');
 const onboardingTwo = require('../temp-assets/onboarding-two.png');
@@ -19,7 +19,6 @@ interface Page {
   key: string;
   title: string;
   body: string;
-  bullet: string;
   image: any;
   aspectRatio: number;
 }
@@ -27,25 +26,22 @@ interface Page {
 const PAGES: Page[] = [
   {
     key: 'simple',
-    title: 'Banking made simpler',
-    body: 'A calm, focused banking home with clear balances, quick actions and transactions you can understand at a glance.',
-    bullet: 'Designed around accessible navigation',
+    title: 'Banking made simpler.',
+    body: 'Enjoy a seamless banking experience with voice guidance and easy navigation.',
     image: onboardingOne,
     aspectRatio: 1308 / 1203
   },
   {
     key: 'control',
-    title: 'Your money, your control',
-    body: 'Review every transfer before it moves. Confirm deliberately, cancel safely and always know what happened.',
-    bullet: 'Secure two-step transfers',
+    title: 'Your money, your control.',
+    body: 'Secure, reliable and always in your hands.',
     image: onboardingTwo,
     aspectRatio: 1342 / 1172
   },
   {
     key: 'barriers',
-    title: 'Banking without barriers',
-    body: 'Voice guidance, screen-reader labels, haptics and adaptable visuals work together so you can bank independently.',
-    bullet: 'Built for TalkBack and VoiceOver',
+    title: 'Banking without barriers.',
+    body: 'Designed for everyone,\nincluding you',
     image: onboardingThree,
     aspectRatio: 1433 / 1098
   }
@@ -53,8 +49,7 @@ const PAGES: Page[] = [
 
 export default function OnboardingScreen() {
   const theme = useAppTheme();
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
   const router = useRouter();
   const { completeOnboarding } = useOnboarding();
   const { status } = useAuth();
@@ -63,11 +58,9 @@ export default function OnboardingScreen() {
   const finishing = useRef(false);
   const page = PAGES[index];
   const isLast = index === PAGES.length - 1;
-  const availableHeight = windowHeight - insets.top - insets.bottom;
-  const topSpacing = Math.round(Math.min(76, Math.max(48, availableHeight * 0.08)));
-  const maxIllustrationHeight = (windowWidth * 1.18) / page.aspectRatio;
-  const illustrationHeight = Math.max(150, Math.min(maxIllustrationHeight, availableHeight - topSpacing - 285));
-  const illustrationWidth = illustrationHeight * page.aspectRatio;
+  useScreenGuidance('Welcome to AccessFlow', page.title, isLast ? 'Get started' : 'Continue');
+  const illustrationWidth = windowWidth;
+  const illustrationHeight = illustrationWidth / page.aspectRatio;
   const illustrationMarginLeft = (windowWidth - illustrationWidth) / 2 - 24;
 
   const goNext = async () => {
@@ -89,8 +82,8 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <Screen edges={['top', 'bottom']} style={{ backgroundColor: theme.colors.background }}>
-      <View style={[styles.page, { paddingTop: topSpacing }]}>
+    <Screen scroll contentStyle={styles.screenContent} edges={['top', 'bottom']} style={{ backgroundColor: theme.colors.background }}>
+      <View style={styles.page}>
         <Animated.View key={page.key} entering={FadeInRight.duration(320)}>
           <View
             style={[
@@ -104,15 +97,9 @@ export default function OnboardingScreen() {
             />
           </View>
 
-          <Text style={[styles.title, { color: theme.colors.text }]}>{page.title}</Text>
-          <Text style={[styles.body, { color: theme.colors.textSecondary }]}>{page.body}</Text>
-          <View style={[styles.bullet, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-            <View style={[styles.check, { backgroundColor: theme.colors.successSurface }]}>
-              <Check size={15} color={theme.colors.success} strokeWidth={3} />
-            </View>
-            <Text style={[styles.bulletText, { color: theme.colors.text }]}>{page.bullet}</Text>
-            {index === 2 ? <Eye size={17} color={theme.colors.primary} /> : null}
-            {index === 2 ? <Hand size={17} color={theme.colors.primary} /> : null}
+          <View style={styles.copy}>
+            <Text style={[styles.title, { color: theme.colors.text }]}>{page.title}</Text>
+            <Text style={[styles.body, { color: theme.colors.textSecondary }]}>{page.body}</Text>
           </View>
         </Animated.View>
 
@@ -134,7 +121,6 @@ export default function OnboardingScreen() {
           <Button
             label={isLast ? 'Get started' : 'Continue'}
             onPress={goNext}
-            icon={ArrowRight}
             size="large"
             hint={isLast ? 'Finish onboarding and continue to sign in' : 'Go to the next introduction page'}
           />
@@ -150,14 +136,13 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   skip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 },
   skipText: { fontSize: 13, fontWeight: '600' },
-  page: { flex: 1, paddingHorizontal: 24 },
-  illustrationWrap: { marginBottom: 8, alignItems: 'center' },
-  pageImage: { resizeMode: 'contain' },
-  title: { fontSize: 28, fontWeight: '700', letterSpacing: -0.6, textAlign: 'center', marginTop: 2 },
-  body: { fontSize: 15, lineHeight: 22, textAlign: 'center', marginTop: 4 },
-  bullet: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: 15, padding: 11, marginTop: 8 },
-  check: { width: 24, height: 24, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  bulletText: { fontSize: 13, fontWeight: '600' },
+  screenContent: { paddingBottom: 0 },
+  page: { flex: 1, paddingHorizontal: 24, justifyContent: 'space-between' },
+  illustrationWrap: { marginBottom: 8, alignItems: 'center', overflow: 'hidden' },
+  pageImage: { resizeMode: 'cover' },
+  copy: { width: '88%', alignSelf: 'center' },
+  title: { width: '94%', alignSelf: 'center', fontSize: 26, fontWeight: '700', letterSpacing: -0.6, textAlign: 'center', marginTop: 2 },
+  body: { fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 4 },
   bottom: { marginTop: 4, paddingBottom: 8, gap: 6, alignItems: 'center' },
   indicators: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 6 },
   indicator: { height: 7, borderRadius: 4 },

@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { useFocusEffect } from 'expo-router';
 import { Building2, CreditCard, Landmark, ShieldCheck, Volume2 } from 'lucide-react-native';
 import { Screen } from '@/src/components/common/Screen';
@@ -11,12 +12,14 @@ import { BalanceCard } from '@/src/components/banking/BalanceCard';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useAuth } from '@/src/features/auth/context/AuthContext';
 import { useFeedback } from '@/src/services/feedback/FeedbackProvider';
+import { useScreenGuidance } from '@/src/hooks/useScreenGuidance';
 import { formatAccountNumber, formatKobo } from '@/src/utils/money';
 
 export default function AccountScreen() {
   const theme = useAppTheme();
   const { account, refreshAccount } = useAuth();
   const { announce } = useFeedback();
+  useScreenGuidance('Account details', 'Review your account name, number, bank and balance.', 'Tap a detail to hear it');
   const [hidden, setHidden] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

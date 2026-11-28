@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { useRouter } from 'expo-router';
 import { ArrowRight, LogOut } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
@@ -11,6 +12,7 @@ import { AppModal } from '@/src/components/common/AppModal';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useAuth } from '@/src/features/auth/context/AuthContext';
 import { useFeedback } from '@/src/services/feedback/FeedbackProvider';
+import { useScreenGuidance } from '@/src/hooks/useScreenGuidance';
 import { formatAccountNumber } from '@/src/utils/money';
 import { initials } from '@/src/utils/format';
 
@@ -19,6 +21,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user, account, logout } = useAuth();
   const { announce } = useFeedback();
+  useScreenGuidance('Profile', 'Review your identity and open account, accessibility or security settings.', 'My accounts');
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -33,7 +36,7 @@ export default function ProfileScreen() {
   return (
     <Screen scroll={false} edges={['top']} style={{ backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <AppHeader title="Profile" subtitle="Your AccessFlow identity and settings" />
+        <AppHeader title="Profile" subtitle="Your AccessFlow identity and settings" centerTitle />
 
         <Card style={styles.profileCard} elevated>
           <View style={[styles.avatar, { backgroundColor: theme.colors.primaryLight }]}>
@@ -46,6 +49,8 @@ export default function ProfileScreen() {
             {user?.role === 'admin' ? 'Administrator' : 'AccessFlow customer'}
           </Text>
         </Card>
+
+        <View style={[styles.sectionDivider, { backgroundColor: theme.colors.border }]} />
 
         <Card padded={false} style={styles.section}>
           <PressableRow
@@ -65,7 +70,13 @@ export default function ProfileScreen() {
           <PressableRow icon={ArrowRight} label="About AccessFlow" value="Research prototype v1.0" />
         </Card>
 
-        <Button label="Sign out" onPress={() => setLogoutVisible(true)} variant="destructive" icon={LogOut} />
+        <Button
+          label="Sign out"
+          onPress={() => setLogoutVisible(true)}
+          variant="destructive"
+          icon={LogOut}
+          style={styles.signOutButton}
+        />
       </ScrollView>
 
       <AppModal
@@ -122,16 +133,30 @@ function PressableRow({
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingBottom: 32 },
-  profileCard: { alignItems: 'center', marginTop: 18, paddingVertical: 26 },
+  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 32 },
+  profileCard: {
+    alignItems: 'center',
+    marginTop: 18,
+    paddingVertical: 26,
+    backgroundColor: 'transparent',
+    shadowOpacity: 0,
+    elevation: 0
+  },
   avatar: { width: 76, height: 76, borderRadius: 25, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 18, fontWeight: '600' },
   name: { fontSize: 18, fontWeight: '600', marginTop: 14, letterSpacing: -0.2 },
   role: { fontSize: 13, marginTop: 4 },
-  section: { marginTop: 18, overflow: 'hidden' },
+  sectionDivider: { height: StyleSheet.hairlineWidth, marginVertical: 14 },
+  section: {
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
+    shadowOpacity: 0,
+    elevation: 0
+  },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 15, borderBottomWidth: StyleSheet.hairlineWidth },
   rowCopy: { flex: 1, gap: 4 },
   rowLabel: { fontWeight: '600' },
   rowValue: { fontWeight: '600' },
+  signOutButton: { marginTop: 18 },
   modalSpacer: { height: 10 }
 });

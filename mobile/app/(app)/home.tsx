@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ArrowLeftRight, Bell, CreditCard, ReceiptText, ShieldCheck, Wallet } from 'lucide-react-native';
 import { Screen } from '@/src/components/common/Screen';
@@ -19,6 +20,7 @@ import { useAuth } from '@/src/features/auth/context/AuthContext';
 import { getBalance } from '@/src/features/dashboard/services/account.service';
 import { getTransactions } from '@/src/features/transactions/services/transaction.service';
 import { useFeedback } from '@/src/services/feedback/FeedbackProvider';
+import { useScreenGuidance } from '@/src/hooks/useScreenGuidance';
 import { toApiError } from '@/src/api/client';
 import { firstName } from '@/src/utils/format';
 import { formatKobo } from '@/src/utils/money';
@@ -36,6 +38,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user, account, refreshAccount } = useAuth();
   const { announce } = useFeedback();
+  useScreenGuidance('Home', 'Your account dashboard shows your balance, quick actions and recent activity.', 'Transfer money');
   const [balance, setBalance] = useState<BalanceSummary | null>(null);
   const [recent, setRecent] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,7 +115,7 @@ export default function HomeScreen() {
       >
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={[styles.greetingTitle, { color: theme.colors.text, fontSize: theme.typography.heading }]}>
+            <Text style={[styles.greetingTitle, { color: theme.colors.text, fontSize: theme.typography.section }]}>
               {greeting()}, {firstName(user?.fullName ?? 'there')}
             </Text>
             <Text style={[styles.greetingSubtitle, { color: theme.colors.textSecondary, fontSize: theme.typography.body }]}>
@@ -148,7 +151,7 @@ export default function HomeScreen() {
             <View style={styles.section}>
               <QuickActions
                 actions={[
-                  { label: 'Transfer', icon: ArrowLeftRight, onPress: () => router.push('/transfer'), featured: true },
+                  { label: 'Transfer', icon: ArrowLeftRight, onPress: () => router.push('/transfer') },
                   { label: 'History', icon: ReceiptText, onPress: () => router.push('/transactions') },
                   { label: 'Account', icon: CreditCard, onPress: () => router.push('/account') },
                   { label: 'Accessibility', icon: ShieldCheck, onPress: () => router.push('/accessibility') }

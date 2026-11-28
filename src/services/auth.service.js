@@ -2,14 +2,21 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { User, Account, AccessibilityPreferences } = require('../models');
 const env = require('../config/env');
-const { ROLES, DEFAULT_BANK_NAME, DEFAULT_ACCOUNT_TYPE, DEMO_STARTING_BALANCE_KOBO, DEFAULT_CURRENCY } = require('../constants');
+const {
+  ROLES,
+  DEFAULT_BANK_NAME,
+  DEFAULT_ACCOUNT_NAME_SUFFIX,
+  DEFAULT_ACCOUNT_TYPE,
+  DEMO_STARTING_BALANCE_KOBO,
+  DEFAULT_CURRENCY
+} = require('../constants');
 const ApiError = require('../utils/ApiError');
 const { generateAccountNumber } = require('../utils/ids');
 const { withAtomicWork } = require('../utils/transactionSession');
 const { successFeedback } = require('../utils/response');
 const { formatKobo } = require('../utils/money');
 
-const createSimulatedAccount = async (user, session) => {
+const createBankAccount = async (user, session) => {
   let account;
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -17,7 +24,7 @@ const createSimulatedAccount = async (user, session) => {
       account = await new Account({
         userId: user._id,
         accountNumber: generateAccountNumber(),
-        accountName: `${user.fullName} - Simulated Account`,
+        accountName: `${user.fullName} - ${DEFAULT_ACCOUNT_NAME_SUFFIX}`,
         bankName: DEFAULT_BANK_NAME,
         accountType: DEFAULT_ACCOUNT_TYPE,
         balanceKobo: DEMO_STARTING_BALANCE_KOBO,
@@ -58,7 +65,7 @@ const register = async ({ fullName, email, phoneNumber, password }) => {
       user.accessibilityPreferences = preferences._id;
       await user.save({ session });
 
-      account = await createSimulatedAccount(user, session);
+      account = await createBankAccount(user, session);
     });
   } catch (error) {
     if (user?._id) {
@@ -75,7 +82,7 @@ const register = async ({ fullName, email, phoneNumber, password }) => {
   return {
     user: user.toSafeObject(),
     account: account.toClientObject(),
-    preferences: { voiceGuidanceEnabled: true, privacyMode: false }
+    preferences: { voiceGuidanceEnabled: true, financialAnnouncementsEnabled: true, privacyMode: false }
   };
 };
 
@@ -90,7 +97,7 @@ const login = async ({ email, password }) => {
   await user.save();
 
   const account = await Account.findOne({ userId: user._id });
-  if (!account) throw new ApiError(500, 'No simulated account is linked to this user', 'CONFIGURATION_ERROR');
+  if (!account) throw new ApiError(500, 'No bank account is linked to this user', 'CONFIGURATION_ERROR');
 
   const token = jwt.sign(
     { sub: user._id.toString(), role: user.role, email: user.email },
@@ -111,7 +118,7 @@ const getMe = async (userId) => {
   if (!user) throw ApiError.unauthorized('Account not found');
 
   const account = await Account.findOne({ userId });
-  if (!account) throw new ApiError(500, 'No simulated account is linked to this user', 'CONFIGURATION_ERROR');
+  if (!account) throw new ApiError(500, 'No bank account is linked to this user', 'CONFIGURATION_ERROR');
 
   return { user: user.toSafeObject(), account: account.toClientObject() };
 };
@@ -129,7 +136,7 @@ const setUserActive = async (id, isActive) => {
 
 const registrationFeedback = (fullName, account) =>
   successFeedback(
-    `Registration complete. Welcome ${fullName}. Your simulated account ${account.accountNumber} has a starting balance of ${formatKobo(account.balanceKobo, account.currency)}.`,
+    `Registration complete. Welcome ${fullName}. Your AccessFlow account ${account.accountNumber} has a starting balance of ${formatKobo(account.balanceKobo, account.currency)}.`,
     { priority: 'high' }
   );
 

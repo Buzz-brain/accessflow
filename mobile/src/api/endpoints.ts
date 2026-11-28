@@ -7,7 +7,8 @@ export const endpoints = {
   },
   accounts: {
     me: '/api/v1/accounts/me',
-    balance: '/api/v1/accounts/me/balance'
+    balance: '/api/v1/accounts/me/balance',
+    lookupRecipient: (accountNumber: string) => `/api/v1/accounts/lookup/${accountNumber}`
   },
   transactions: {
     list: '/api/v1/transactions',

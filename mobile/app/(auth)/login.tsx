@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useRouter, Redirect } from 'expo-router';
@@ -9,12 +10,16 @@ import { Input } from '@/src/components/forms/Input';
 import { Button } from '@/src/components/common/Button';
 import { Card } from '@/src/components/common/Card';
 import { SwitchRow } from '@/src/components/common/SwitchRow';
-import { BrandMark } from '@/src/components/common/BrandMark';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useAuth } from '@/src/features/auth/context/AuthContext';
+import { getBalance } from '@/src/features/dashboard/services/account.service';
 import { useFeedback } from '@/src/services/feedback/FeedbackProvider';
+import { useScreenGuidance } from '@/src/hooks/useScreenGuidance';
 import { useToast } from '@/src/components/common/ToastProvider';
 import { toApiError } from '@/src/api/client';
+import { formatKoboForSpeech } from '@/src/services/feedback/spokenGuidance';
+
+const accessflowLogo = require('../../temp-assets/accessflow-logo.png');
 
 const schema = z.object({
   email: z.string().min(1, 'Enter your email address').email('Enter a valid email address'),
@@ -27,7 +32,7 @@ export default function LoginScreen() {
   const theme = useAppTheme();
   const router = useRouter();
   const { status, signIn } = useAuth();
-  const { announceFeedback, announce } = useFeedback();
+  const { announceFeedback, announce, announceFinancial } = useFeedback();
   const { showToast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
@@ -35,6 +40,8 @@ export default function LoginScreen() {
   const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
     defaultValues: { email: '', password: '' }
   });
+
+  useScreenGuidance('Login', 'Sign in with your email address and password.', 'Login');
 
   if (status === 'signedIn') return <Redirect href="/home" />;
 
@@ -48,7 +55,16 @@ export default function LoginScreen() {
     }
     try {
       const response = await signIn(parsed.data.email.trim(), parsed.data.password, remember);
+      if (!response.data) throw new Error('Login response was incomplete.');
+      const balanceResponse = await getBalance().catch(() => null);
+      const balanceKobo = balanceResponse?.data?.balanceKobo ?? response.data.account.balanceKobo;
+      const currency = balanceResponse?.data?.currency ?? response.data.account.currency;
+
       announceFeedback(response.accessibilityFeedback, { force: true });
+      announceFinancial(`Your available balance is ${formatKoboForSpeech(balanceKobo, currency)}.`, {
+        force: true,
+        key: 'auth:login:balance'
+      });
       showToast(response.message, 'success');
       router.replace('/home');
     } catch (error) {
@@ -72,7 +88,7 @@ export default function LoginScreen() {
         <View style={styles.blobB} />
 
         <View style={styles.brandContainer}>
-          <BrandMark size={56} monochrome />
+          <Image source={accessflowLogo} style={styles.brandLogo} resizeMode="contain" />
           <Text style={[styles.brandTitle, { color: theme.colors.text }]}>AccessFlow</Text>
           <Text style={[styles.brandTagline, { color: theme.colors.textSecondary }]}>Banking without barriers.</Text>
         </View>
@@ -96,7 +112,8 @@ export default function LoginScreen() {
                 keyboardType="email-address"
                 textContentType="emailAddress"
                 returnKeyType="next"
-                description="Use the email address you registered with."
+                variant="soft"
+                labelMode="floating"
                 error={errors.email?.message}
                 value={field.value}
                 onChangeText={field.onChange}
@@ -117,7 +134,8 @@ export default function LoginScreen() {
                 autoCorrect={false}
                 textContentType="password"
                 returnKeyType="done"
-                description="At least 8 characters with a letter and a number."
+                variant="soft"
+                labelMode="floating"
                 error={errors.password?.message}
                 rightAdornment={
                   <Pressable
@@ -139,7 +157,6 @@ export default function LoginScreen() {
           <SwitchRow
             icon={ShieldCheck}
             title="Remember me"
-            description="Store your session securely on this device."
             value={remember}
             onChange={setRemember}
           />
@@ -151,13 +168,15 @@ export default function LoginScreen() {
           ) : null}
 
           <Button label="Login" onPress={handleSubmit(onSubmit)} loading={isSubmitting} size="large" hint="Sign in to your AccessFlow account" />
+
+          <View style={styles.forgotContainer}>
+            <Pressable onPress={handleForgotPassword} accessibilityRole="button" accessibilityLabel="Forgot password" style={styles.forgotLink}>
+              <Text style={[styles.forgotText, { color: theme.colors.primary }]}>Forgot Password?</Text>
+            </Pressable>
+          </View>
         </Card>
 
-        <View style={styles.forgotContainer}>
-          <Pressable onPress={handleForgotPassword} accessibilityRole="button" accessibilityLabel="Forgot password" style={styles.forgotLink}>
-            <Text style={[styles.forgotText, { color: theme.colors.textSecondary }]}>Forgot Password?</Text>
-          </Pressable>
-        </View>
+        <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
         <View style={styles.bottomContainer}>
           <Text style={[styles.bottomText, { color: theme.colors.textSecondary }]}>Don&apos;t have an account?</Text>
@@ -176,22 +195,24 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingHorizontal: 22, justifyContent: 'center' },
+  content: { flexGrow: 1, paddingHorizontal: 10, justifyContent: 'center' },
   blobA: { position: 'absolute', top: -120, left: -100, width: 300, height: 300, borderRadius: 150, backgroundColor: '#E9F6EF', opacity: 0.6 },
   blobB: { position: 'absolute', bottom: -120, right: -100, width: 260, height: 260, borderRadius: 130, backgroundColor: '#E9F6EF', opacity: 0.4 },
-  brandContainer: { alignItems: 'center', marginTop: 20, marginBottom: 24 },
-  brandTitle: { fontSize: 24, fontWeight: '700', letterSpacing: -0.5 },
-  brandTagline: { fontSize: 13, marginTop: 4 },
+  brandContainer: { alignItems: 'center', marginTop: 12, marginBottom: 24 },
+  brandLogo: { width: 150, height: 100 },
+  brandTitle: { fontSize: 24, fontWeight: '700', letterSpacing: -0.5, marginTop: -8 },
+  brandTagline: { fontSize: 13, fontWeight: '600', marginTop: 2 },
   welcomeContainer: { alignItems: 'center', marginBottom: 26 },
   welcomeTitle: { fontSize: 26, fontWeight: '700', letterSpacing: -0.6 },
   welcomeSubtitle: { fontSize: 15, marginTop: 6 },
-  formCard: { width: '100%', gap: 14, maxWidth: 420, alignSelf: 'center' },
+  formCard: { width: '100%', gap: 14, maxWidth: 420, alignSelf: 'center', borderWidth: 0 },
   eyeButton: { padding: 8 },
   error: { fontSize: 12, fontWeight: '600', textAlign: 'center', marginBottom: 6 },
-  forgotContainer: { alignItems: 'flex-start', marginTop: 10, paddingHorizontal: 4 },
+  forgotContainer: { alignItems: 'center', marginTop: -6, paddingHorizontal: 4 },
   forgotLink: { minHeight: 44, justifyContent: 'center' },
   forgotText: { fontSize: 13, fontWeight: '600' },
-  bottomContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 20 },
+  divider: { height: 1, width: '100%', maxWidth: 420, alignSelf: 'center' },
+  bottomContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 16 },
   bottomText: { fontSize: 13, fontWeight: '600' },
   registerLink: { minHeight: 44, justifyContent: 'center' },
   registerText: { fontSize: 13, fontWeight: '700' }

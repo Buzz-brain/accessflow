@@ -8,7 +8,7 @@ const register = async (req, res) => {
 
   return sendSuccess(res, {
     status: 201,
-    message: 'Registration successful. A simulated account has been created.',
+    message: 'Registration successful. Your AccessFlow account has been created.',
     data: { user: result.user, account: result.account, preferences },
     accessibilityFeedback: authService.registrationFeedback(req.body.fullName, result.account)
   });

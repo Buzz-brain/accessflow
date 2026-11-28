@@ -19,6 +19,7 @@ describe('Accessibility preferences API', () => {
     expect(response.body.data).toEqual(
       expect.objectContaining({
         voiceGuidanceEnabled: true,
+        financialAnnouncementsEnabled: true,
         voiceSpeed: 1,
         vibrationEnabled: true,
         vibrationIntensity: 50,
@@ -36,11 +37,17 @@ describe('Accessibility preferences API', () => {
     const response = await request(app)
       .put('/api/v1/accessibility/preferences')
       .set(authHeader(token))
-      .send({ voiceSpeed: 1.5, privacyMode: true, preferredAccessibilityMode: 'voice_first' });
+      .send({
+        voiceSpeed: 1.5,
+        privacyMode: true,
+        financialAnnouncementsEnabled: false,
+        preferredAccessibilityMode: 'voice_first'
+      });
 
     expect(response.status).toBe(200);
     expect(response.body.data.voiceSpeed).toBe(1.5);
     expect(response.body.data.privacyMode).toBe(true);
+    expect(response.body.data.financialAnnouncementsEnabled).toBe(false);
     expect(response.body.data.preferredAccessibilityMode).toBe('voice_first');
     expect(response.body.data.highContrastEnabled).toBe(false);
 
@@ -64,5 +71,6 @@ describe('Accessibility preferences API', () => {
     expect(response.status).toBe(200);
     expect(response.body.data.voiceSpeed).toBe(1);
     expect(response.body.data.privacyMode).toBe(false);
+    expect(response.body.data.financialAnnouncementsEnabled).toBe(true);
   });
 });

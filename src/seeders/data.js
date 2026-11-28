@@ -245,7 +245,7 @@ const tasks = [
   {
     taskCode: 'VIEW_BALANCE',
     taskName: 'View account balance',
-    description: 'Retrieve and understand the current simulated account balance.'
+    description: 'Retrieve and understand the current account balance.'
   },
   {
     taskCode: 'VIEW_TRANSACTIONS',
@@ -255,7 +255,7 @@ const tasks = [
   {
     taskCode: 'TRANSFER_FUNDS',
     taskName: 'Transfer funds',
-    description: 'Review and complete a simulated transfer to another demo account.'
+    description: 'Review and complete a transfer to another demo account.'
   },
   {
     taskCode: 'REVIEW_CONFIRM_TRANSACTION',

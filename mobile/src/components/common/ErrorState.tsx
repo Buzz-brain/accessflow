@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { CircleX, RefreshCw } from 'lucide-react-native';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { Button } from './Button';

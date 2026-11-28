@@ -11,6 +11,7 @@ import type { ApiSuccess } from '@/src/types/api';
 
 export const DEFAULT_PREFERENCES: AccessibilityPreferences = {
   voiceGuidanceEnabled: true,
+  financialAnnouncementsEnabled: true,
   voiceSpeed: 1,
   vibrationEnabled: true,
   vibrationIntensity: 50,

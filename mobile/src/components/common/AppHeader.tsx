@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { ArrowLeft } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
@@ -10,12 +11,13 @@ interface AppHeaderProps {
   title?: string;
   subtitle?: string;
   showBack?: boolean;
+  onBack?: () => void;
   showBrand?: boolean;
   centerTitle?: boolean;
   actions?: ReactNode;
 }
 
-export function AppHeader({ title, subtitle, showBack, showBrand, centerTitle, actions }: AppHeaderProps) {
+export function AppHeader({ title, subtitle, showBack, onBack, showBrand, centerTitle, actions }: AppHeaderProps) {
   const theme = useAppTheme();
   const router = useRouter();
 
@@ -39,7 +41,7 @@ export function AppHeader({ title, subtitle, showBack, showBrand, centerTitle, a
           <IconButton
             icon={ArrowLeft}
             label="Go back"
-            onPress={() => router.back()}
+            onPress={onBack ?? (() => router.back())}
             variant="surface"
             size={40}
           />

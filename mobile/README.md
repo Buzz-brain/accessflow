@@ -71,7 +71,8 @@ npm run ios
 - Live account, balance, transaction list and transaction detail screens.
 - Two-step transfer workflow: review, confirm and cancel using backend APIs with an idempotency key.
 - Accessibility Centre backed by the API's preference endpoints.
-- Voice guidance, haptics, native screen-reader labels, privacy mode, high contrast, text scaling and light/dark themes.
+- Voice guidance, haptics, native screen-reader labels, financial-announcement controls, privacy mode, high contrast, text scaling and light/dark themes.
+- Step-by-step spoken transfer guidance with recipient lookup status, bank confirmation, amount entry, fee/total review, confirmation progress, success and failure states.
 - User-facing MAM dimension information from the backend reference endpoint.
 - Loading, empty, error, offline and session-expired states.
 
@@ -82,8 +83,23 @@ Accessibility settings are API-backed except light/dark theme choice, which is s
 ```bash
 npm run typecheck
 npm run lint
+npm test
 npx expo export --platform ios
 ```
+
+Device verification checklist (Android TalkBack and iOS VoiceOver):
+
+| Step | Expected spoken guidance |
+| --- | --- |
+| Open app or sign in | Screen purpose and primary action; welcome and real balance after authentication |
+| Enter recipient number | Step 1 of 4, lookup progress, recipient name/bank/number, bank confirmation prompt |
+| Recipient not found | Helpful error plus `Check number` and `Clear and try another` actions |
+| Enter amount | Step 2 of 4, real available balance, typed/keypad amount in naira |
+| Review | Step 3 of 4, fee and total debit; no funds moved before explicit confirmation |
+| Confirm | Processing notice, success/failure result, new balance on success |
+| Navigate tabs | Screen title, purpose and primary action |
+
+Expo Speech is used only when no native screen reader is active, so TalkBack/VoiceOver users do not hear duplicate speech.
 
 ## Notes
 

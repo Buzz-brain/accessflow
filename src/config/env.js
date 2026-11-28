@@ -50,7 +50,8 @@ const env = Object.freeze({
   rateLimit: Object.freeze({
     windowMs: parseInteger(process.env.RATE_LIMIT_WINDOW_MS, 900000, { min: 1000 }),
     loginMax: parseInteger(process.env.LOGIN_RATE_LIMIT_MAX, 10, { min: 1 }),
-    registerMax: parseInteger(process.env.REGISTER_RATE_LIMIT_MAX, 5, { min: 1 })
+    registerMax: parseInteger(process.env.REGISTER_RATE_LIMIT_MAX, 5, { min: 1 }),
+    lookupMax: parseInteger(process.env.ACCOUNT_LOOKUP_RATE_LIMIT_MAX, 30, { min: 1 })
   }),
   demoPassword,
   trustProxy: process.env.TRUST_PROXY === 'true',

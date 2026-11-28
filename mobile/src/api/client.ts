@@ -82,8 +82,12 @@ api.interceptors.response.use(
   }
 );
 
-export async function apiGet<T>(url: string, params?: Record<string, string | number | boolean | undefined>) {
-  const response = await api.get<ApiSuccess<T>>(url, { params });
+export async function apiGet<T>(
+  url: string,
+  params?: Record<string, string | number | boolean | undefined>,
+  signal?: AbortSignal
+) {
+  const response = await api.get<ApiSuccess<T>>(url, { params, signal });
   return response.data;
 }
 

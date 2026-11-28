@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { ArrowDownLeft, ArrowUpRight, Landmark, Repeat2 } from 'lucide-react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
+import { PhosphorTransactionIcon, type PhosphorTransactionIconName } from './PhosphorTransactionIcon';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { formatNaira, formatSignedNaira } from '@/src/utils/money';
 import { formatDate } from '@/src/utils/dates';
@@ -20,28 +21,52 @@ export function TransactionRow({
 }) {
   const theme = useAppTheme();
   const isCredit = transaction.direction === 'credit' || transaction.transactionType === 'deposit';
-  const Icon =
-    transaction.transactionType === 'deposit'
-      ? Landmark
-      : transaction.transactionType === 'withdrawal'
-        ? ArrowUpRight
-        : isCredit
-          ? ArrowDownLeft
-          : Repeat2;
-  const toneBg = isCredit ? theme.colors.successSurface : theme.colors.surfaceMuted;
-  const toneFg = isCredit ? theme.colors.success : theme.colors.text;
+  const isPending = transaction.status === 'pending_confirmation';
+  const isUnsuccessful = transaction.status === 'failed' || transaction.status === 'cancelled';
+  const iconName: PhosphorTransactionIconName = isPending
+    ? 'pending'
+    : isUnsuccessful
+      ? 'unsuccessful'
+      : transaction.transactionType === 'deposit'
+        ? 'deposit'
+        : transaction.transactionType === 'withdrawal'
+          ? 'withdrawal'
+          : isCredit
+            ? 'receive'
+            : 'send';
+  const palette = isPending
+    ? { bg: theme.colors.warningSurface, fg: theme.colors.warning, border: theme.colors.warning }
+    : isUnsuccessful
+      ? { bg: theme.colors.errorSurface, fg: theme.colors.error, border: theme.colors.error }
+      : isCredit
+        ? { bg: theme.colors.successSurface, fg: theme.colors.success, border: theme.colors.success }
+        : { bg: theme.colors.primaryLight, fg: theme.colors.primaryDark, border: theme.colors.primary };
 
   return (
     <Pressable
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityLabel={`${transactionTitle(transaction)}, ${formatNaira(transaction.amount, currency)}, ${statusLabel(transaction.status)}, ${formatDate(transaction.createdAt)}`}
+      accessibilityLabel={`${transactionTitle(transaction)}, ${formatNaira(transaction.amount, currency)}, ${transactionSubtitle(transaction)}, ${statusLabel(transaction.status)}, ${formatDate(transaction.createdAt)}`}
       android_ripple={{ color: theme.colors.primaryLight }}
       style={({ pressed }) => [styles.row, compact && styles.rowCompact, { opacity: onPress && pressed ? 0.82 : 1 }]}
     >
-      <View style={[styles.iconWrap, compact && styles.iconWrapCompact, { backgroundColor: toneBg }]}>
-        <Icon size={20} color={toneFg} strokeWidth={2.1} />
+      <View
+        style={[
+          styles.iconWrap,
+          compact && styles.iconWrapCompact,
+          {
+            backgroundColor: palette.bg,
+            borderColor: palette.border,
+            shadowColor: theme.colors.text,
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
+            shadowOffset: { width: 0, height: 3 },
+            elevation: 2
+          }
+        ]}
+      >
+        <PhosphorTransactionIcon name={iconName} size={compact ? 22 : 26} color={palette.fg} />
       </View>
       <View style={styles.copy}>
         <View style={styles.topRow}>
@@ -74,8 +99,8 @@ export function TransactionRow({
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 16, minHeight: 92 },
   rowCompact: { paddingVertical: 14, minHeight: 72 },
-  iconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  iconWrapCompact: { width: 38, height: 38, borderRadius: 13 },
+  iconWrap: { width: 46, height: 46, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  iconWrapCompact: { width: 40, height: 40, borderRadius: 14 },
   copy: { flex: 1, minWidth: 0, gap: 4 },
   topRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   title: { flex: 1, fontWeight: '600' },

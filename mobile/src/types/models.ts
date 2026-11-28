@@ -30,6 +30,12 @@ export interface BalanceSummary {
   balanceKobo: number;
 }
 
+export interface RecipientLookup {
+  accountNumber: string;
+  recipientName: string;
+  bankName: string;
+}
+
 export type TransactionType = 'transfer' | 'deposit' | 'withdrawal';
 export type TransactionStatus =
   | 'initiated'
@@ -60,6 +66,10 @@ export interface Transaction {
   createdAt: string;
   updatedAt: string;
   direction?: TransactionDirection;
+  counterpartyName?: string | null;
+  counterpartyBankName?: string | null;
+  counterpartyAccountNumber?: string | null;
+  counterpartyAccountLast4?: string | null;
 }
 
 export type GestureSensitivity = 'low' | 'medium' | 'high';
@@ -72,6 +82,7 @@ export type AccessibilityMode =
 
 export interface AccessibilityPreferences {
   voiceGuidanceEnabled: boolean;
+  financialAnnouncementsEnabled: boolean;
   voiceSpeed: number;
   vibrationEnabled: boolean;
   vibrationIntensity: number;
@@ -89,10 +100,13 @@ export type PreferenceUpdate = Partial<Omit<AccessibilityPreferences, 'updatedAt
 export interface TransferReview {
   recipientName: string;
   recipientAccountNumber: string;
+  recipientBankName?: string;
   senderName: string;
   senderAccountNumber: string;
   amount: number;
   amountKobo: number;
+  feeKobo?: number;
+  totalDebitKobo?: number;
   narration: string;
   reference: string;
   status: TransactionStatus;

@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import type { LucideIcon } from 'lucide-react-native';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { Button } from './Button';
@@ -24,7 +25,7 @@ export function EmptyState({ icon: Icon, title, message, actionLabel, onAction }
       <Text style={[styles.message, { color: theme.colors.textSecondary, fontSize: theme.typography.body }]}>{message}</Text>
       {actionLabel && onAction ? (
         <View style={styles.action}>
-          <Button label={actionLabel} onPress={onAction} variant="secondary" fullWidth={false} />
+          <Button label={actionLabel} onPress={onAction} variant="secondary" fullWidth={false} style={styles.actionButton} />
         </View>
       ) : null}
     </View>
@@ -36,5 +37,6 @@ const styles = StyleSheet.create({
   iconWrap: { width: 62, height: 62, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   title: { fontWeight: '600', textAlign: 'center' },
   message: { lineHeight: 20, textAlign: 'center', marginTop: 8 },
-  action: { marginTop: 18, width: '100%', alignItems: 'center' }
+  action: { marginTop: 18, width: '100%', alignItems: 'center' },
+  actionButton: { alignSelf: 'center' }
 });

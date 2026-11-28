@@ -276,6 +276,7 @@ Editable fields, with validation ranges:
 | Field | Type / range | Default |
 | --- | --- | --- |
 | `voiceGuidanceEnabled` | boolean | `true` |
+| `financialAnnouncementsEnabled` | boolean | `true` |
 | `voiceSpeed` | number 0.5-2 | `1` |
 | `vibrationEnabled` | boolean | `true` |
 | `vibrationIntensity` | integer 0-100 | `50` |
@@ -285,6 +286,8 @@ Editable fields, with validation ranges:
 | `textScale` | number 1-2 | `1` |
 | `simplifiedNavigation` | boolean | `false` |
 | `preferredAccessibilityMode` | `balanced`, `voice_first`, `vibration_first`, `high_contrast`, `simplified` | `balanced` |
+
+`voiceGuidanceEnabled` controls all app-initiated announcements. `financialAnnouncementsEnabled` additionally controls balances, amounts, fees and total debits; privacy mode replaces those values with a generic hidden-information message. Transfer reviews now expose `recipientBankName`, `feeKobo` and `totalDebitKobo` from the reviewed transaction so the mobile app never calculates money movements itself.
 
 ### MAM and MAS
 
@@ -423,6 +426,7 @@ npm test               # all unit and integration tests
 npm run test:unit      # pure scoring/SUS/metrics tests
 npm run test:integration
 npm run lint           # syntax check across all JavaScript sources
+cd mobile && npm test   # guidance decision and money-to-speech unit tests
 ```
 
 Integration tests use an in-memory MongoDB replica set, so no external database service is needed. On the first run, `mongodb-memory-server` downloads a MongoDB binary; subsequent runs use the cached binary.

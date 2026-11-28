@@ -1,13 +1,15 @@
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, Tabs, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Accessibility, ArrowLeftRight, House, ReceiptText, UserRound } from 'lucide-react-native';
 import { useAuth } from '@/src/features/auth/context/AuthContext';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { SplashScreen } from '@/src/screens/SplashScreen';
+import { scaleFontSize } from '@/src/components/common/AppText';
 
 export default function AppTabLayout() {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { status } = useAuth();
 
   if (status === 'bootstrapping') return <SplashScreen />;
@@ -31,9 +33,9 @@ export default function AppTabLayout() {
           elevation: 0
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: scaleFontSize(12),
           fontWeight: '600',
-          fontFamily: 'IBMPlexSans_600SemiBold',
+          fontFamily: 'Poppins_600SemiBold',
           marginTop: 3
         },
         tabBarItemStyle: { paddingVertical: 4 },
@@ -50,6 +52,12 @@ export default function AppTabLayout() {
       />
       <Tabs.Screen
         name="transactions"
+        listeners={{
+          tabPress: (event) => {
+            event.preventDefault();
+            router.replace('/transactions');
+          }
+        }}
         options={{
           title: 'Transactions',
           tabBarAccessibilityLabel: 'Transactions tab',

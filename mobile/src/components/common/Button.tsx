@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import type { LucideIcon } from 'lucide-react-native';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 
@@ -14,7 +15,8 @@ interface ButtonProps {
   icon?: LucideIcon;
   iconPosition?: 'left' | 'right';
   hint?: string;
-  size?: 'regular' | 'large';
+  size?: 'compact' | 'regular' | 'large';
+  style?: ViewStyle;
 }
 
 export function Button({
@@ -27,7 +29,8 @@ export function Button({
   icon: Icon,
   iconPosition = 'right',
   hint,
-  size = 'regular'
+  size = 'regular',
+  style
 }: ButtonProps) {
   const theme = useAppTheme();
   const isDisabled = disabled || loading;
@@ -40,7 +43,7 @@ export function Button({
   }[variant];
 
   const IconNode = Icon ? (
-    <Icon size={size === 'large' ? 20 : 18} color={palette.fg} strokeWidth={2.2} />
+    <Icon size={size === 'compact' ? 16 : size === 'large' ? 20 : 18} color={palette.fg} strokeWidth={2.2} />
   ) : null;
 
   return (
@@ -53,19 +56,20 @@ export function Button({
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
       android_ripple={{ color: variant === 'primary' ? 'rgba(255,255,255,0.22)' : theme.colors.primaryLight }}
-      style={({ pressed }) => [
-        styles.button,
-        variant === 'primary' && theme.shadows.raised,
-        {
-          backgroundColor: palette.bg,
-          borderColor: palette.border,
-          minHeight: size === 'large' ? 62 : 54,
-          borderRadius: theme.radius.input,
-          opacity: isDisabled ? 0.5 : pressed ? 0.9 : 1,
-          alignSelf: fullWidth ? 'stretch' : 'flex-start',
-          paddingHorizontal: fullWidth ? 20 : 24
-        }
-      ]}
+        style={({ pressed }) => [
+          styles.button,
+          variant === 'primary' && theme.shadows.raised,
+          {
+            backgroundColor: palette.bg,
+            borderColor: palette.border,
+            minHeight: size === 'compact' ? 38 : size === 'large' ? 52 : 54,
+            borderRadius: theme.radius.pill,
+            opacity: isDisabled ? 0.5 : pressed ? 0.9 : 1,
+            alignSelf: fullWidth ? 'stretch' : 'flex-start',
+            paddingHorizontal: size === 'compact' ? 14 : fullWidth ? 20 : 24
+          },
+          style
+        ]}
     >
       <View style={styles.inner}>
         {loading ? (
@@ -78,7 +82,11 @@ export function Button({
             styles.label,
             {
               color: palette.fg,
-              fontSize: size === 'large' ? theme.typography.section : theme.typography.body
+              fontSize: size === 'compact'
+                ? theme.typography.secondary
+                : size === 'large'
+                  ? theme.typography.section
+                  : theme.typography.body
             }
           ]}
         >

@@ -2,10 +2,19 @@ const mongoose = require('mongoose');
 const {
   DEFAULT_CURRENCY,
   DEFAULT_BANK_NAME,
+  DEFAULT_ACCOUNT_NAME_SUFFIX,
   DEFAULT_ACCOUNT_TYPE,
   DEMO_STARTING_BALANCE_KOBO
 } = require('../constants');
 const { koboToNaira, parseKoboAmount, parseNairaToKobo } = require('../utils/money');
+
+const normalizeBankName = (bankName) =>
+  typeof bankName === 'string' && /simulated/i.test(bankName) ? DEFAULT_BANK_NAME : bankName;
+
+const normalizeAccountName = (accountName) =>
+  typeof accountName === 'string'
+    ? accountName.replace(/(\s+-\s+|\s+)Simulated Account$/i, ` - ${DEFAULT_ACCOUNT_NAME_SUFFIX}`)
+    : accountName;
 
 const accountSchema = new mongoose.Schema(
   {
@@ -42,14 +51,17 @@ accountSchema.methods.toClientObject = function toClientObject() {
   return {
     id: this._id.toString(),
     accountNumber: this.accountNumber,
-    accountName: this.accountName,
-    bankName: this.bankName,
+    accountName: normalizeAccountName(this.accountName),
+    bankName: normalizeBankName(this.bankName),
     accountType: this.accountType,
     currency: this.currency,
     balance: koboToNaira(balanceKobo),
     balanceKobo
   };
 };
+
+accountSchema.statics.normalizeBankName = normalizeBankName;
+accountSchema.statics.normalizeAccountName = normalizeAccountName;
 
 const Account = mongoose.model('Account', accountSchema);
 

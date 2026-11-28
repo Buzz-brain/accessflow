@@ -12,6 +12,7 @@ const {
 } = require('../models');
 const {
   DEFAULT_BANK_NAME,
+  DEFAULT_ACCOUNT_NAME_SUFFIX,
   DEFAULT_ACCOUNT_TYPE,
   DEFAULT_CURRENCY,
   DEMO_STARTING_BALANCE_KOBO,
@@ -79,14 +80,23 @@ const seedTasks = async () => {
 
 const createAccount = async (user) => {
   let account = await Account.findOne({ userId: user._id });
-  if (account) return account;
+  if (account) {
+    const bankName = Account.normalizeBankName(account.bankName);
+    const accountName = Account.normalizeAccountName(account.accountName);
+    if (bankName !== account.bankName || accountName !== account.accountName) {
+      account.bankName = bankName;
+      account.accountName = accountName;
+      await account.save();
+    }
+    return account;
+  }
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
     try {
       account = await Account.create({
         userId: user._id,
         accountNumber: generateAccountNumber(),
-        accountName: `${user.fullName} - Simulated Account`,
+        accountName: `${user.fullName} - ${DEFAULT_ACCOUNT_NAME_SUFFIX}`,
         bankName: DEFAULT_BANK_NAME,
         accountType: DEFAULT_ACCOUNT_TYPE,
         balanceKobo: DEMO_STARTING_BALANCE_KOBO,
@@ -130,14 +140,14 @@ const seedUsers = async () => {
         reference,
         transactionType: 'deposit',
         amountKobo: DEMO_DEPOSIT_AMOUNT_KOBO,
-        narration: 'Simulated demo deposit',
+        narration: 'Demo deposit',
         status: 'successful',
         confirmationStatus: 'not_required',
         previousBalanceKobo: account.balanceKobo,
         newBalanceKobo: account.balanceKobo + DEMO_DEPOSIT_AMOUNT_KOBO,
         statusHistory: [
-          { status: 'initiated', note: 'Seeded simulated deposit' },
-          { status: 'successful', note: 'Seeded simulated deposit completed' }
+          { status: 'initiated', note: 'Seeded demo deposit' },
+          { status: 'successful', note: 'Seeded demo deposit completed' }
         ]
       });
       await Account.updateOne({ _id: account._id }, { $inc: { balanceKobo: DEMO_DEPOSIT_AMOUNT_KOBO } });

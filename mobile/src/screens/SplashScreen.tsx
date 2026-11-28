@@ -3,6 +3,7 @@ import { StatusBar, StyleSheet, View } from 'react-native';
 import Animated, { FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { BrandMark } from '@/src/components/common/BrandMark';
+import { scaleFontSize } from '@/src/components/common/AppText';
 
 export function SplashScreen() {
   const theme = useAppTheme();
@@ -39,6 +40,6 @@ const styles = StyleSheet.create({
   orbB: { position: 'absolute', width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(91,255,193,0.14)', bottom: -120, left: -100 },
   mark: { marginBottom: 28 },
   markDisc: { width: 132, height: 132, borderRadius: 66, alignItems: 'center', justifyContent: 'center' },
-  wordmark: { color: '#FFFFFF', fontSize: 30, fontWeight: '700', letterSpacing: -0.8, fontFamily: 'IBMPlexSans_700Bold' },
-  tagline: { color: 'rgba(255,255,255,0.85)', fontSize: 15, marginTop: 10, fontFamily: 'IBMPlexSans_400Regular' }
+  wordmark: { color: '#FFFFFF', fontSize: scaleFontSize(30), fontWeight: '700', letterSpacing: -0.8, fontFamily: 'Poppins_700Bold' },
+  tagline: { color: 'rgba(255,255,255,0.85)', fontSize: scaleFontSize(15), marginTop: 10, fontFamily: 'Poppins_400Regular' }
 });

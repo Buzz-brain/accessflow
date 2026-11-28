@@ -5,7 +5,7 @@ describe('Authentication API', () => {
   beforeAll(startTestDb);
   afterAll(stopTestDb);
 
-  test('registers a user and creates a simulated account without exposing sensitive data', async () => {
+  test('registers a user and creates an AccessFlow account without exposing sensitive data', async () => {
     const user = await register({ fullName: 'Vision Impaired Tester' });
 
     expect(user.account.accountNumber).toMatch(/^\d{10}$/);

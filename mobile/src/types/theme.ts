@@ -4,6 +4,7 @@ export interface ThemeColors {
   primary: string;
   primaryDark: string;
   primaryLight: string;
+  accentSurface: string;
   background: string;
   surface: string;
   surfaceElevated: string;

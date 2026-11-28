@@ -40,6 +40,10 @@
       "<rootDir>/src/tests/setup.js"
     ],
     "testTimeout": 120000,
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/mobile/"
+    ],
     "verbose": false
   }
 }

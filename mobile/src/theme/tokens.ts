@@ -7,7 +7,8 @@ const lightColors: ThemeColors = {
   primary: '#009E60',
   primaryDark: '#006B48',
   primaryLight: '#E9F6EF',
-  background: '#FFFFFF',
+  accentSurface: '#DDF3E6',
+  background: '#FAFCFA',
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
   surfaceMuted: '#F4F7F5',
@@ -31,6 +32,7 @@ const darkColors: ThemeColors = {
   primary: '#2BC48A',
   primaryDark: '#087F5B',
   primaryLight: '#123B2E',
+  accentSurface: '#173D2E',
   background: '#0F1712',
   surface: '#19231E',
   surfaceElevated: '#223029',
@@ -52,6 +54,7 @@ const darkColors: ThemeColors = {
 };
 
 const highContrastLight: Partial<ThemeColors> = {
+  accentSurface: '#D6EFE1',
   background: '#FFFFFF',
   surface: '#FFFFFF',
   surfaceMuted: '#F2F2F2',
@@ -72,6 +75,7 @@ const highContrastLight: Partial<ThemeColors> = {
 };
 
 const highContrastDark: Partial<ThemeColors> = {
+  accentSurface: '#0D2A1F',
   background: '#000000',
   surface: '#0B100D',
   surfaceMuted: '#151D18',
@@ -93,7 +97,7 @@ export function createTheme(mode: ThemeMode, highContrast: boolean, textScale: n
       : highContrastLight
     : {};
   const scale = Math.max(1, Math.min(2, textScale));
-  const fontFamily = 'IBMPlexSans_400Regular';
+  const fontFamily = 'Poppins_400Regular';
 
   return {
     mode,
@@ -109,7 +113,7 @@ export function createTheme(mode: ThemeMode, highContrast: boolean, textScale: n
       financial: Math.round(30 * scale),
       financialLarge: Math.round(36 * scale),
       fontFamily,
-      fontFamilyBold: 'IBMPlexSans_700Bold'
+      fontFamilyBold: 'Poppins_700Bold'
     },
     spacing,
     radius,

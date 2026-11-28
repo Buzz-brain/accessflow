@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import type { TransactionStatus } from '@/src/types/models';
 import { statusLabel } from '@/src/utils/format';

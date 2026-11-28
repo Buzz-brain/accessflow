@@ -1,18 +1,24 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { formatAccountNumber, formatKobo } from '@/src/utils/money';
 import type { TransferReview } from '@/src/types/models';
 
 export function ReviewDetailsCard({ review, currency = 'NGN' }: { review: TransferReview; currency?: string }) {
   const theme = useAppTheme();
+  const feeKobo = review.feeKobo ?? 0;
+  const totalDebitKobo = review.totalDebitKobo ?? review.amountKobo;
   const rows = [
     { label: 'You are sending', value: formatKobo(review.amountKobo, currency), emphasis: true },
     { label: 'To', value: review.recipientName },
     { label: 'Account number', value: formatAccountNumber(review.recipientAccountNumber) },
+    ...(review.recipientBankName ? [{ label: 'Recipient bank', value: review.recipientBankName, emphasis: false }] : []),
     { label: 'From', value: review.senderName },
     { label: 'Your account', value: formatAccountNumber(review.senderAccountNumber) },
-    { label: 'Description', value: review.narration },
-    { label: 'Reference', value: review.reference }
+    { label: 'Transfer fee', value: formatKobo(feeKobo, currency), emphasis: false },
+    { label: 'Total debit', value: formatKobo(totalDebitKobo, currency), emphasis: false },
+    { label: 'Description', value: review.narration, emphasis: false },
+    { label: 'Reference', value: review.reference, emphasis: false }
   ];
 
   return (
@@ -28,7 +34,12 @@ export function ReviewDetailsCard({ review, currency = 'NGN' }: { review: Transf
       ]}
     >
       {rows.map((row) => (
-        <View key={row.label} style={[styles.row, row.emphasis && styles.emphasisRow, { borderBottomColor: theme.colors.border }]}>
+        <View
+          key={row.label}
+          accessible
+          accessibilityLabel={`${row.label}: ${row.value}`}
+          style={[styles.row, row.emphasis && styles.emphasisRow, { borderBottomColor: theme.colors.border }]}
+        >
           <Text style={[styles.label, { color: theme.colors.textSecondary, fontSize: theme.typography.secondary }]}>
             {row.label}
           </Text>

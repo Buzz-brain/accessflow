@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/common/AppText';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Search, Wallet } from 'lucide-react-native';
 import { Screen } from '@/src/components/common/Screen';
@@ -14,6 +15,7 @@ import { SegmentedControl, type SegmentOption } from '@/src/components/common/Se
 import { TransactionRow } from '@/src/components/banking/TransactionRow';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { getTransactions } from '@/src/features/transactions/services/transaction.service';
+import { useScreenGuidance } from '@/src/hooks/useScreenGuidance';
 import { toApiError } from '@/src/api/client';
 import { transactionDayLabel, transactionDayKey } from '@/src/utils/dates';
 import type { PaginationMeta } from '@/src/types/api';
@@ -30,6 +32,7 @@ const FILTERS: SegmentOption<Filter>[] = [
 export default function TransactionsScreen() {
   const theme = useAppTheme();
   const router = useRouter();
+  useScreenGuidance('Transaction history', 'Review, filter and search your account activity.', 'Search transactions');
   const [items, setItems] = useState<Transaction[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [filter, setFilter] = useState<Filter>('all');
@@ -113,14 +116,17 @@ export default function TransactionsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={() => void load(1, 'refresh')} tintColor={theme.colors.primary} />
         }
       >
-        <AppHeader title="Transactions" subtitle="Every transaction, clearly explained" />
+        <AppHeader title="Transaction History" centerTitle />
         <Input
           label="Search transactions"
-          placeholder="Reference, description or amount"
+          labelMode="hidden"
+          variant="filled"
+          fieldSize="compact"
+          placeholder="Search transactions..."
+          leftAdornment={<Search size={18} color={theme.colors.textSecondary} />}
           value={query}
           onChangeText={setQuery}
           autoCapitalize="none"
-          rightAdornment={<Search size={18} color={theme.colors.textSecondary} style={{ marginRight: 4 }} />}
         />
         <View style={styles.filter}>
           <SegmentedControl label="Filter transactions by type" options={FILTERS} value={filter} onChange={setFilter} />
